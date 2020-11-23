@@ -151,9 +151,10 @@ import {
   WeiboCircleOutlined,
 } from "@ant-design/icons-vue";
 
-// 引入全局提示消息框
+import { httpPost } from "@/utils/http";
+import { user } from "@/api";
+// 引入全局消息提示框
 import { message } from "ant-design-vue";
-
 export default {
   data() {
     return {
@@ -188,46 +189,27 @@ export default {
       this.$refs.loginForm
         .validate()
         .then(() => {
-          // console.log("成功");
-          // console.log("values", this.form);
-          // console.log(this);
-
-          // 1.收集数据
+          let url = user.LoginUser;
+          // 整理参数
           let params = {
             username: this.form.username,
             password: this.form.password,
           };
-          // 2.发起请求
-          this.$axios
-            .post("/login", params)
-            // 成功回调
-            .then(response => {
-              console.log(response.data);
-              let { data, meta } = response.data;
-              // console.log(meta);
-              // console.log(data);
-
-              //  如果meta中的status为400 说明登录失败
-              if (meta.status == 400) {
-                return message.error(meta.msg);
-              }
-
-              // 如果meta中的status为200 说明登陆成功
-              if (meta.status == 200) {
-                // 提示一下用户 登录成功
-                message.success(meta.msg);
-                // 把后端返回的token存到sessionStorage中(sessionStorage存储数据的时间是打开浏览器存储 关闭浏览器 数据消失)
-                window.sessionStorage.setItem("token", data.token);
-                //  路由跳转到首页
-                this.$router.push("/home");
-              }
-            })
-            // 失败回调
-            .catch(err => {
-              console.log(err);
-            });
+          // 发起请求
+          httpPost(url, params).then((res) => {
+            let { data, meta } = res;
+            if (meta.status == 400) {
+              return message.error(meta.msg);
+            }
+            
+            if (meta.status == 200) {
+              message.success(meta.msg);
+              window.sessionStorage.setItem("token", data.token);
+              this.$router.push("/home");
+            }
+          });
         })
-        .catch(error => {
+        .catch((error) => {
           // console.log("失败");
           console.log("error", error);
         });

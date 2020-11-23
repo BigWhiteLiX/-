@@ -1,8 +1,8 @@
 <template>
-  <router-view></router-view>
+  <router-view />
 </template>
 
-<style lang="less">
+<style>
 #app {
   height: 100%;
   font-family: Avenir, Helvetica, Arial, sans-serif;
