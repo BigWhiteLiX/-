@@ -201,7 +201,7 @@ export default {
             if (meta.status == 400) {
               return message.error(meta.msg);
             }
-            
+
             if (meta.status == 200) {
               message.success(meta.msg);
               window.sessionStorage.setItem("token", data.token);

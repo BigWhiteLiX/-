@@ -76,8 +76,10 @@
       :confirm-loading="confirmLoading"
       okText="确定"
       cancelText="取消"
+      @ok="handleAddUser"
+      @cencel="cancelAddUser"
     >
-      <a-form :model="addFormModel" :rules="addFormRules">
+      <a-form :model="addFormModel" :rules="addFormRules" ref="addFormRef">
         <a-row>
           <a-col :span="24">
             <!-- 用户名 -->
@@ -89,7 +91,7 @@
               :labelCol="{ span: 4 }"
               :wrapperCol="{ span: 20 }"
             >
-              <a-input type="text" />
+              <a-input type="text" v-model:value="addFormModel.username" />
             </a-form-item>
             <!-- 密码 -->
             <a-form-item
@@ -100,7 +102,10 @@
               :labelCol="{ span: 4 }"
               :wrapperCol="{ span: 20 }"
             >
-              <a-input-password type="text" />
+              <a-input-password
+                type="text"
+                v-model:value="addFormModel.password"
+              />
             </a-form-item>
             <!-- 邮箱 -->
             <a-form-item
@@ -111,18 +116,18 @@
               :labelCol="{ span: 4 }"
               :wrapperCol="{ span: 20 }"
             >
-              <a-input type="text" />
+              <a-input type="text" v-model:value="addFormModel.email" />
             </a-form-item>
             <!-- 手机号 -->
             <a-form-item
               required
               has-feedback
               label="手机号"
-              name="phone"
+              name="mobile"
               :labelCol="{ span: 4 }"
               :wrapperCol="{ span: 20 }"
             >
-              <a-input type="text" />
+              <a-input type="text" v-model:value="addFormModel.mobile" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -133,14 +138,16 @@
 </template>
 
 <script>
-import { httpGet } from "@/utils/http";
+import { httpGet, httpPost } from "@/utils/http";
 import { user } from "@/api";
+import { message } from "ant-design-vue";
 // 引入菜单小图标
 import {
   EditOutlined,
   DeleteOutlined,
   SettingOutlined,
 } from "@ant-design/icons-vue";
+
 export default {
   data() {
     // 自定义表单校验email
@@ -148,10 +155,9 @@ export default {
       if (value === "") {
         return Promise.reject("请输入您的邮箱");
       } else if (
-        !/^[A-Za-zd0-9]+([-_.][A-Za-zd]+)*@([A-Za-zd]+[-.])+[A-Za-zd]{2,5}$/.text(
-          value
-        )
+        !/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(value)
       ) {
+        // 如果邮箱格式错误就提示格式
         return Promise.reject("您的邮箱格式错误");
       } else {
         return Promise.resolve();
@@ -159,7 +165,16 @@ export default {
     };
 
     // 自定义表单校验mobile
-
+    let checkMobile = async (rule, value) => {
+      if (value === "") {
+        return Promise.reject("请输入您的手机号");
+      } else if (!/^[1]([3-9])[0-9]{9}$/.test(value)) {
+        // 如果邮箱格式错误就提示格式
+        return Promise.reject("您的手机号格式错误");
+      } else {
+        return Promise.resolve();
+      }
+    };
     return {
       tableList: [
         {
@@ -232,7 +247,8 @@ export default {
           { required: true, message: "请输入密码", trigger: "blur" },
           { min: 6, max: 16, message: "长度在6-16个字符之间", trigger: "blur" },
         ],
-        email: [{ validator: checkEmail, trigger: "请输入邮箱" }],
+        email: [{ validator: checkEmail, trigger: "change" }],
+        mobile: [{ validator: checkMobile, trigger: "change" }],
       },
     };
   },
@@ -242,7 +258,7 @@ export default {
   },
   methods: {
     // 添加用户
-    
+
     getUsers(pagenum = 1, pagesize = 2) {
       httpGet(user.GetUsers, {
         pagenum: pagenum,
@@ -273,8 +289,50 @@ export default {
     onChange(page, pagesize) {
       this.getUsers(page, pagesize);
     },
+    // 点击添加按钮显示遮罩层
     showModal() {
       this.visible = true;
+    },
+    // 点击确定，添加用户
+    handleAddUser() {
+      this.$refs.addFormRef
+        .validate()
+        .then(() => {
+          // 获取请求参数
+          let params = {
+            username: this.addFormModel.username,
+            password: this.addFormModel.password,
+            email: this.addFormModel.username,
+            mobile: this.addFormModel.password,
+          };
+          // 获取请求地址，使用post请求发起ajax
+          httpPost(user.AddUser, params)
+            .then((res) => {
+              // console.log(res);
+              let { data, meta } = res;
+              if (meta.status == 201) {
+                console.log(data);
+                this.visible = false;
+                // 清空表单中的输入框
+                this.$refs.addFormRef.resetFields();
+                message.succsess(meta.msg);
+                let pagenum = this.current;
+                let pagesize = this.pagesize;
+                this.getUsers(pagenum, pagesize);
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        })
+        .catch((error) => {
+          console.log("error", error);
+        });
+    },
+    // 点击取消，清空输入框
+    cencelAddUser() {
+      // 清空表单中的输入框
+      this.$refs.addFormRef.resetFields();
     },
   },
   components: {
