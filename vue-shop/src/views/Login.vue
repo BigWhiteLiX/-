@@ -151,12 +151,16 @@ import {
   WeiboCircleOutlined,
 } from "@ant-design/icons-vue";
 
+// 引入http方法
 import { httpPost } from "@/utils/http";
+// 引入接口
 import { user } from "@/api";
-// 引入全局消息提示框
+// 引入全局提示消息框
 import { message } from "ant-design-vue";
+
 export default {
   data() {
+
     return {
       // 定义表单数据模型(对象)
       form: {
@@ -184,30 +188,43 @@ export default {
   methods: {
     handleSubmit() {
       // 让这个表单域进行校验
-      // then代表成功
-      // catch代表失败
+
       this.$refs.loginForm
         .validate()
         .then(() => {
+          // 2.引入请求地址
           let url = user.LoginUser;
-          // 整理参数
+
+          // 1.整理参数
           let params = {
             username: this.form.username,
             password: this.form.password,
           };
-          // 发起请求
-          httpPost(url, params).then((res) => {
-            let { data, meta } = res;
-            if (meta.status == 400) {
-              return message.error(meta.msg);
-            }
+          // 3.发起请求
+          httpPost(url, params)
+            .then((response) => {
+              // 成功时的回调
+              let { data, meta } = response;
 
-            if (meta.status == 200) {
-              message.success(meta.msg);
-              window.sessionStorage.setItem("token", data.token);
-              this.$router.push("/home");
-            }
-          });
+              //  如果meta中的status为400 说明登录失败
+              if (meta.status == 400) {
+                return message.error(meta.msg);
+              }
+
+              // 如果meta中的status为200 说明登陆成功
+              if (meta.status == 200) {
+                // 提示一下用户 登录成功
+                message.success(meta.msg);
+                // 把后端返回的token存到sessionStorage中(sessionStorage存储数据的时间是打开浏览器存储 关闭浏览器 数据消失)
+                window.sessionStorage.setItem("token", data.token);
+                //  路由跳转到首页
+                this.$router.push("/home");
+              }
+            })
+            .catch((err) => {
+              // 失败时的回调
+              throw new Error(err);
+            });
         })
         .catch((error) => {
           // console.log("失败");

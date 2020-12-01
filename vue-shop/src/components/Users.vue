@@ -58,7 +58,7 @@
           >
             <DeleteOutlined
           /></a-button>
-          <!-- 权限 -->
+          <!-- 角色 -->
           <a-button
             type="default"
             style="background-color: #e6a23c; color: #fff"
@@ -162,14 +162,13 @@
       v-model:visible="editVisible"
       :confirm-loading="confirmLoading"
       @ok="handleEditUser"
+      @cancel="cancelEditUser"
     >
       <a-form :model="editFormModel" :rules="editFormRules" ref="editFormRef">
         <a-row>
           <a-col :span="24">
             <!-- 用户名 -->
             <a-form-item
-              required
-              has-feedback
               label="用户名"
               name="username"
               :labelCol="{ span: 4 }"
@@ -197,8 +196,8 @@
 
             <!-- 手机号 -->
             <a-form-item
-              aria-required=""
               required
+              has-feedback
               label="手机号"
               name="mobile"
               :labelCol="{ span: 4 }"
@@ -210,31 +209,31 @@
         </a-row>
       </a-form>
     </a-modal>
-    <!-- 分配用户弹出框 -->
+    <!-- 分配角色弹出框 -->
     <a-modal
-      title="编辑用户"
-      cancelText="取消"
-      okText="确定"
+      title="分配角色"
       v-model:visible="roleVisible"
-      @ok="handleEditRoles"
+      @ok="handleEditRole"
     >
-      <p>当前的用户:{{ userInfo.username }}</p>
-      <p>当前的角色:{{ userInfo.role_name }}</p>
+      <p>当前的用户: {{ userInfo.username }}</p>
+
+      <p>当前的角色: {{ userInfo.role_name }}</p>
+
       <p>
         分配新角色:
         <a-select
           v-model:value="roleSelected"
-          style="width: 120px"
-          @change="handleRoleValue"
+          @change="handleSelectValue"
           placeholder="请选择"
+          style="width: 120px"
         >
           <a-select-option
             v-for="item in rolesList"
             :key="item.id"
             :value="item.id"
           >
-            {{ item.roleName }}</a-select-option
-          >
+            {{ item.roleName }}
+          </a-select-option>
         </a-select>
       </p>
     </a-modal>
@@ -353,6 +352,7 @@ export default {
         email: [{ validator: checkEmail, trigger: "change" }],
         mobile: [{ validator: checkMobile, trigger: "change" }],
       },
+
       // 分配角色弹出框
       roleVisible: false,
       userInfo: {},
@@ -432,7 +432,7 @@ export default {
               if (meta.status == 201) {
                 console.log(data);
                 // 让模态框消失
-                this.visible = false;
+                this.addVisible = false;
                 // 清空表单中的输入框
                 this.$refs.addFormRef.resetFields();
                 message.success(meta.msg);
@@ -491,19 +491,18 @@ export default {
       });
     },
 
-    //  编辑用户信息
     // 回显用户信息
     handleReadUser(userId) {
-      // 弹出用户编辑框
+      // 让编辑用户弹出框显示
       this.editVisible = true;
       // 发起ajax请求
       console.log(userId);
       httpGet(user.GetUser + `/${userId}`)
-        .then((res) => {
-          // console.log(res);
-          let { data, meta } = res;
+        .then((response) => {
+          console.log(response);
+          let { data, meta } = response;
+
           if (meta.status == 200) {
-            // console.log(data)
             this.editFormModel = data;
           }
         })
@@ -514,21 +513,23 @@ export default {
 
     // 更新用户信息
     handleEditUser() {
-      // 表单校验拦截
       this.$refs.editFormRef
         .validate()
         .then(() => {
+          // 发起ajax请求 更新数据
           httpPut(
             user.UpdateUser + `/${this.editFormModel.id}`,
             this.editFormModel
           )
             .then((response) => {
+              // console.log(response);
+              //
               let { meta } = response;
               if (meta.status == 200) {
-                // console.log(data);
-                // 让模态框消失
-                this.editVisible = false;
+                // 模态框消失
 
+                this.editVisible = false;
+                // 提示用户信息
                 message.success(meta.msg);
                 // 刷新表格数据
                 this.getUsers();
@@ -538,25 +539,24 @@ export default {
               console.log(err);
             });
         })
-        .catch((error) => {
-          console.log("error", error);
+        .catch((err) => {
+          console.log(err);
         });
     },
     // 取消用户更新
-    cancelEditUser() {
-      message.warning("已取消操作！！");
-    },
+    cancelEditUser() {},
 
-    // 分配回显角色信息
+    // 回显角色信息
     handleReadRole(user) {
-      // 让弹出框显示
+      // 让分配角色弹出框显示
       this.roleVisible = true;
       this.userInfo = user;
       // console.log(user);
       httpGet(role.GetRoles)
-        .then((res) => {
-          // console.log(res);
-          let { data, meta } = res;
+        .then((response) => {
+          // console.log(response);
+          let { data, meta } = response;
+
           if (meta.status == 200) {
             this.rolesList = data;
           }
@@ -565,23 +565,38 @@ export default {
           console.log(err);
         });
     },
+    // 获取下拉菜单的值
+
     // 修改用户角色
-    handleEditRoles() {
-      // 获取选择到的角色ID
+    handleEditRole() {
+      // 获取选择到的角色id
       let rid = this.roleSelected;
+
+      // 如果用户没有选择 给用户一个提示 不要发请求
       if (rid == null) {
         message.error("请您选择一个角色！！");
+        return;
       }
-      // 如果用户选择了那么就发送请求
+      // 如果用户选择了 那么就发请求 修改角色
       httpPut(`users/${this.userInfo.id}/role`, { rid: this.roleSelected })
-        .then((res) => {
-          let { meta } = res;
-          // console.log(res)
+        .then((response) => {
+          console.log(response);
+          let { meta } = response;
+
           if (meta.status == 400) {
             message.error(meta.msg);
+            // // 重新渲染表格
+            // this.getUsers();
+            // // 重置选项
+            // this.roleSelected = null;
+            // // 模态框消失
+            // this.roleVisible = false;
           }
+
           if (meta.status == 200) {
+            // 提示用户成功
             message.success(meta.msg);
+            // 重新渲染表格
             this.getUsers();
             // 重置选项
             this.roleSelected = null;
@@ -593,11 +608,15 @@ export default {
           console.log(err);
         });
     },
+
     // 更改用户状态
     handleUserState(checked, event) {
+      // console.log(checked)
+      // console.log(event.target.id);
+
       httpPut(`users/${event.target.id}/state/${checked}`)
-        .then((res) => {
-          console.log(res);
+        .then((response) => {
+          console.log(response);
         })
         .catch((err) => {
           console.log(err);
