@@ -432,7 +432,7 @@ export default {
               if (meta.status == 201) {
                 console.log(data);
                 // 让模态框消失
-                this.addVisible = false;
+                this.visible = false;
                 // 清空表单中的输入框
                 this.$refs.addFormRef.resetFields();
                 message.success(meta.msg);
@@ -518,6 +518,9 @@ export default {
         .then(() => {
           // 发起ajax请求 更新数据
           httpPut(
+            // this.editFormModel在回显的时候 里面就有数据
+            // 字段是双向绑定的，因此输入框中数据发生了改变 这里也会改变
+            // 因此可以直接发送
             user.UpdateUser + `/${this.editFormModel.id}`,
             this.editFormModel
           )
@@ -527,7 +530,6 @@ export default {
               let { meta } = response;
               if (meta.status == 200) {
                 // 模态框消失
-
                 this.editVisible = false;
                 // 提示用户信息
                 message.success(meta.msg);
@@ -566,12 +568,14 @@ export default {
         });
     },
     // 获取下拉菜单的值
+    handleSelectValue(value) {
+      console.log(value);
+    },
 
     // 修改用户角色
     handleEditRole() {
       // 获取选择到的角色id
       let rid = this.roleSelected;
-
       // 如果用户没有选择 给用户一个提示 不要发请求
       if (rid == null) {
         message.error("请您选择一个角色！！");
@@ -580,17 +584,11 @@ export default {
       // 如果用户选择了 那么就发请求 修改角色
       httpPut(`users/${this.userInfo.id}/role`, { rid: this.roleSelected })
         .then((response) => {
-          console.log(response);
+          // console.log(response)
           let { meta } = response;
 
           if (meta.status == 400) {
             message.error(meta.msg);
-            // // 重新渲染表格
-            // this.getUsers();
-            // // 重置选项
-            // this.roleSelected = null;
-            // // 模态框消失
-            // this.roleVisible = false;
           }
 
           if (meta.status == 200) {

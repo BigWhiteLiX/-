@@ -12,10 +12,20 @@ export const user = {
 export const rights = {
   AsideMenus: "menus", // 获取左侧菜单权限
   GetRights: "rights/list",
-  GetTreeRights:'rights/tree'
+  GetTreeRights: "rights/tree",
 };
 
 // 关于角色的接口
 export const role = {
   GetRoles: "roles"
+}
+
+// 关于订单的接口
+export const order={
+  GetOrders:'orders'
+}
+// 关于商品的接口
+export const goods={
+  GetGoods:'goods',
+  GetCategories:'categories'
 }

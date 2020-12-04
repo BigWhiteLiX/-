@@ -78,8 +78,9 @@ export default {
     handleReadRights() {
       httpGet(rights.GetRights)
         .then((response) => {
-    
+          // console.log(response)
           let { data, meta } = response;
+
           if (meta.status == 200) {
             this.rightsData = data;
           }

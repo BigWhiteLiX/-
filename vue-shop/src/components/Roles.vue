@@ -112,6 +112,7 @@
     <a-modal
       v-model:visible="treeVisible"
       title="分配权限"
+      @ok="handleUpdateTree"
       :afterClose="handleResetKey"
     >
       <a-tree
@@ -129,7 +130,7 @@
 // 导入接口
 import { role, rights } from "@/api";
 // 导入请求方法
-import { httpGet, httpDelete } from "@/utils/http";
+import { httpGet, httpDelete, httpPost } from "@/utils/http";
 // 引入菜单小图标
 import {
   EditOutlined,
@@ -176,6 +177,7 @@ export default {
       treeVisible: false,
       treeData: [],
       defKeys: [],
+      roleId: "",
     };
   },
   created() {
@@ -202,23 +204,27 @@ export default {
      * rightId 权限id
      */
     handleTagClose(e, roleId, rightId) {
+      // 阻止标签立即消失
       e.preventDefault();
       const _this = this;
+      // 弹出是否要删除确认弹出框
       Modal.confirm({
         title: "提示",
         icon: createVNode(ExclamationCircleOutlined),
         content: "此操作将永久删除该文件, 是否继续?",
         okText: "确认",
         cancelText: "取消",
+        // 点击取消按钮 提示用户
         onCancel() {
-          message.warning("已取消删除");
+          message.warning("已取消删除操作");
         },
+        // 点击确定按钮
         onOk() {
+          // 准备接口参数 roleId角色id rightsId权限id
           httpDelete(`roles/${roleId}/rights/${rightId}`)
             .then((response) => {
-              console.log(response);
+              // console.log(response);
               let { meta } = response;
-
               if (meta.status == 200) {
                 // 提示用户
                 message.success(meta.msg);
@@ -233,27 +239,25 @@ export default {
       });
     },
     handleReadTreeRights(record) {
+      this.roleId = record.id;
       httpGet(rights.GetTreeRights)
         .then((response) => {
-          console.log(response);
+          // console.log(response);
           let { meta, data } = response;
 
           if (meta.status == 200) {
-            console.log(data);
+            // console.log(data);
             // 所有权限
             this.treeData = data;
-            this.treeVisible = true;
 
             // 某一个角色所拥有的权限
             this.handleLeafData(record, this.defKeys);
+            this.treeVisible = true;
           }
         })
         .catch((err) => {
           console.log(err);
-
         });
-
-      // console.log(record)
     },
     // node就是角色信息
     handleLeafData(node, arr) {
@@ -268,6 +272,21 @@ export default {
     // 清空tree中的数据
     handleResetKey() {
       this.defKeys = [];
+    },
+    handleUpdateTree() {
+      httpPost(`roles/${this.roleId}/rights`, { rid: this.defKeys.join(",") })
+        .then((res) => {
+          console.log(res);
+          let { meta } = res;
+          if (meta.status == 200) {
+            message.success(meta.msg);
+            this.handleReadRoles();
+            this.treeVisible = false;
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     },
   },
   components: {

@@ -148,7 +148,7 @@ import {
   MailOutlined,
   AlipayCircleOutlined,
   TaobaoCircleOutlined,
-  WeiboCircleOutlined,
+  WeiboCircleOutlined
 } from "@ant-design/icons-vue";
 
 // 引入http方法
@@ -160,12 +160,11 @@ import { message } from "ant-design-vue";
 
 export default {
   data() {
-
     return {
       // 定义表单数据模型(对象)
       form: {
         username: "admin",
-        password: "123456",
+        password: "123456"
       },
       // 定义表单校验规则
       rules: {
@@ -174,35 +173,36 @@ export default {
           // required 必须的
           // trigger 啥时候触发
           { required: true, message: "请输入用户名", trigger: "blur" },
-          { min: 4, max: 16, message: "长度在4-16个字符之间", trigger: "blur" },
+          { min: 4, max: 16, message: "长度在4-16个字符之间", trigger: "blur" }
         ],
         password: [
           // required 必须的
           // trigger 啥时候触发
           { required: true, message: "请输入密码", trigger: "blur" },
-          { min: 6, max: 16, message: "长度在6-16个字符之间", trigger: "blur" },
-        ],
-      },
+          { min: 6, max: 16, message: "长度在6-16个字符之间", trigger: "blur" }
+        ]
+      }
     };
   },
   methods: {
     handleSubmit() {
       // 让这个表单域进行校验
-
+      // then代表成功
+      // catch代表失败
       this.$refs.loginForm
         .validate()
         .then(() => {
           // 2.引入请求地址
           let url = user.LoginUser;
-
+          // console.log(url);
           // 1.整理参数
           let params = {
             username: this.form.username,
-            password: this.form.password,
+            password: this.form.password
           };
           // 3.发起请求
           httpPost(url, params)
-            .then((response) => {
+            .then(response => {
               // 成功时的回调
               let { data, meta } = response;
 
@@ -221,16 +221,16 @@ export default {
                 this.$router.push("/home");
               }
             })
-            .catch((err) => {
+            .catch(err => {
               // 失败时的回调
               throw new Error(err);
             });
         })
-        .catch((error) => {
+        .catch(error => {
           // console.log("失败");
           console.log("error", error);
         });
-    },
+    }
   },
   components: {
     UserOutlined,
@@ -239,8 +239,8 @@ export default {
     MailOutlined,
     AlipayCircleOutlined,
     TaobaoCircleOutlined,
-    WeiboCircleOutlined,
-  },
+    WeiboCircleOutlined
+  }
 };
 </script>
 
