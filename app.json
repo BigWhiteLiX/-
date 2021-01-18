@@ -8,6 +8,7 @@
     "pages/goods_list/goods_list"
   ],
   "window": {
+    
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#c00000",
     "navigationBarTitleText": "黑马优购",

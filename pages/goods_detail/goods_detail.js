@@ -5,7 +5,7 @@ Page({
    * 页面的初始数据
    */
   data: {
-    shopList:{}
+    shopList: {}
   },
 
   /**
@@ -15,12 +15,12 @@ Page({
     let that = this;
     wx.request({
       url: 'https://www.uinav.com/api/public/v1/goods/detail',
-      data:{
-        goods_id:options.goods_id
+      data: {
+        goods_id: options.goods_id
       },
       success(res) {
         that.setData({
-          shopList:res.data.message
+          shopList: res.data.message
         })
       }
     })
